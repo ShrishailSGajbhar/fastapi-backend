@@ -1,41 +1,28 @@
-from fastapi import FastAPI, Query
+from fastapi import Depends, FastAPI, Query
 from typing import Optional, Union
 from datetime import date
 
 from pydantic import BaseModel
 #Use Optional to make a parameter optional and if not provided it will be None
+#Use Union to allow multiple types for a parameter
 #Use Query to add validation to the parameters
-
+#Depends is used to define the dependencies for the endpoint
 
 app = FastAPI()
 
-class SHotel(BaseModel):
-    name: str
-    location: str
-    stars: int
-    has_pool: bool
-    price: float
-
-@app.get("/hotels/", response_model=list[SHotel])
-async def get_hotels(location: str, 
-                     datefrom: Union[date,str], 
-                     dateto: Union[date,str], 
-                     has_pool: Optional[bool], 
-                     stars: Optional[int]=Query(None, le=5, ge=1)) -> list[SHotel]:
+class HotelSearchArgs:
+    def __init__(self, location: str, datefrom: Union[date,str], dateto: Union[date,str], has_pool: Optional[bool], stars: Optional[int]):
+        self.location = location
+        self.datefrom = datefrom
+        self.dateto = dateto
+        self.has_pool = has_pool
+        self.stars = stars
     
-    return [{"name": "Hotel A",
-            "location": location,
-            "stars": stars,
-            "has_pool": has_pool,
-            "price": 100.0}]
 
-async def get_hotels(location: str, 
-                     datefrom: date, 
-                     dateto: date, 
-                     has_pool: Optional[bool], 
-                     stars: Optional[int]=Query(None, le=5, ge=1)) :
+@app.get("/hotels/")
+async def get_hotels(search_args:HotelSearchArgs = Depends()):
     
-    return {"hotels": "all"}
+    return search_args
 
 class SBookings(BaseModel):
     room_id: int
